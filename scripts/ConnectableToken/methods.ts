@@ -1,28 +1,14 @@
-import { config } from 'hardhat';
 import * as dotenv from 'dotenv';
 import { abi } from './artifacts';
-import Caver, { AbiItem } from 'caver-js';
-import { HttpNetworkUserConfig } from 'hardhat/types';
+import { AbiItem } from 'caver-js';
 import { ConnectableTokenInterface } from '../../typechain/ConnectableToken';
+import { getCaverWithDeployerKeyring, getDeployerKeyring } from '../caver';
 
 dotenv.config();
 
-export default function getConnectableTokenMethods() {
-  const network = config.networks[process.env.HARDHAT_NETWORK as string] as HttpNetworkUserConfig;
-  const contractAddress = '0xc4af4db082fa1f47757c08c40db9620ce83df40a';
-
-  const caver = new Caver(
-    new Caver.providers.HttpProvider(network.url!, {
-      headers: [
-        { name: 'Authorization', value: 'Basic ' + Buffer.from(process.env.ACCESS_KEY_ID + ':' + process.env.SECRET_ACCESS_KEY).toString('base64') },
-        { name: 'x-chain-id', value: network.chainId!.toString() },
-      ],
-    })
-  );
-
-  const deployerKeyring = caver.wallet.keyring.createFromPrivateKey(process.env.DEPLOYER_KEY!);
-
-  caver.wallet.add(deployerKeyring);
+export default function getConnectableTokenMethods(contractAddress: string) {
+  const caver = getCaverWithDeployerKeyring();
+  const deployerKeyring = getDeployerKeyring();
 
   const connectableTokenContract = new caver.contract(abi as AbiItem[], contractAddress, { gasPrice: '25000000000', gas: 5000000 });
 
