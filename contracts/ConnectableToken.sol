@@ -2,18 +2,20 @@
 pragma solidity ^0.8.4;
 
 import '@klaytn/contracts/KIP/token/KIP17/KIP17.sol';
-import '@klaytn/contracts/KIP/token/KIP17/extensions/KIP17URIStorage.sol';
+import '@klaytn/contracts/KIP/token/KIP17/extensions/KIP17MetadataMintable.sol';
 import '@klaytn/contracts/security/Pausable.sol';
 import '@klaytn/contracts/access/Ownable.sol';
 import '@klaytn/contracts/KIP/token/KIP17/extensions/KIP17Burnable.sol';
 import '@klaytn/contracts/utils/Counters.sol';
 
-contract ConnectableToken is KIP17, KIP17URIStorage, Pausable, Ownable, KIP17Burnable {
+contract ConnectableToken is KIP17, KIP17MetadataMintable, Pausable, Ownable, KIP17Burnable {
   using Counters for Counters.Counter;
 
   Counters.Counter private _tokenIdCounter;
 
-  constructor(string memory _name, string memory _symbol) KIP17(_name, _symbol) {}
+  constructor(string memory _name, string memory _symbol) KIP17(_name, _symbol) {
+    _tokenIdCounter.increment();
+  }
 
   function pause() public onlyOwner {
     _pause();
@@ -30,7 +32,7 @@ contract ConnectableToken is KIP17, KIP17URIStorage, Pausable, Ownable, KIP17Bur
     _setTokenURI(tokenId, uri);
   }
 
-  function supportsInterface(bytes4 interfaceId) public view virtual override(KIP17, KIP17Burnable) returns (bool) {
+  function supportsInterface(bytes4 interfaceId) public view virtual override(KIP17, KIP17MetadataMintable, KIP17Burnable) returns (bool) {
     return super.supportsInterface(interfaceId);
   }
 
@@ -38,7 +40,7 @@ contract ConnectableToken is KIP17, KIP17URIStorage, Pausable, Ownable, KIP17Bur
     address from,
     address to,
     uint256 tokenId
-  ) internal override whenNotPaused {
+  ) internal override whenNotPaused onlyOwner {
     super._beforeTokenTransfer(from, to, tokenId);
   }
 
